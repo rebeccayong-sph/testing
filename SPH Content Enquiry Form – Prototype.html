@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SPH Content Enquiry Form – Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#232D38; --brand:#F15A22; --accent:#C2410C; --accent-soft:#FEF3EE;
+  --bg:#F4F5F7; --surface:#FFFFFF; --sub:#F8F9FA; --text:#1F2933; --muted:#5F6B7A;
+  --ph:#8A939E; --border:#D5DAE1; --info-bg:#EAF1FC; --info-text:#1E4D99;
+  --error:#B42318; --error-bg:#FEF3F2; --note-bg:#FFF8DB; --note-text:#6B5300; --note-border:#E8C547;
+  --on-accent:#FFFFFF; --header-text:#D9DEE5;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --navy:#151B22; --accent:#F0703C; --accent-soft:#3A2218;
+    --bg:#0F1419; --surface:#1A2129; --sub:#212A33; --text:#E6EAEF; --muted:#A3ADB9;
+    --ph:#7C8794; --border:#36414D; --info-bg:#1A2B44; --info-text:#A9C7F5;
+    --error:#F97066; --error-bg:#3A1C1A; --note-bg:#3A3215; --note-text:#F2DC8A; --note-border:#8A7420;
+    --on-accent:#1A0C05; --header-text:#C3CAD3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --navy:#151B22; --accent:#F0703C; --accent-soft:#3A2218;
+  --bg:#0F1419; --surface:#1A2129; --sub:#212A33; --text:#E6EAEF; --muted:#A3ADB9;
+  --ph:#7C8794; --border:#36414D; --info-bg:#1A2B44; --info-text:#A9C7F5;
+  --error:#F97066; --error-bg:#3A1C1A; --note-bg:#3A3215; --note-text:#F2DC8A; --note-border:#8A7420;
+  --on-accent:#1A0C05; --header-text:#C3CAD3;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 80px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Header */
+.site-header{background:var(--navy);color:#fff;border-bottom:4px solid var(--brand)}
+.site-header .in{max-width:1200px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:20px;color:#fff}
+.site-header .sep{width:1px;height:22px;background:#5B6672}
+.site-header .tag{color:var(--header-text);font-size:15px}
+.site-header .help{margin-left:auto;color:var(--header-text);font-size:14px}
+
+/* Prototype controls */
+.proto{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--note-bg);border-bottom:1px solid var(--note-border);color:var(--note-text)}
+.proto .in{max-width:1200px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;font-size:14px}
+.proto strong{font-weight:600}
+.proto label{display:inline-flex;align-items:center;gap:8px}
+.proto select{padding:6px 8px;border:1px solid var(--note-border);border-radius:6px;background:var(--surface);color:var(--text)}
+.proto .btn-link{background:none;border:0;color:var(--note-text);text-decoration:underline;cursor:pointer;padding:4px}
+.proto .push{margin-left:auto;display:flex;gap:12px;flex-wrap:wrap}
+
+main{max-width:840px;margin:0 auto;padding:40px 20px 64px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:700;letter-spacing:-0.01em}
+.lede{color:var(--muted);font-size:16px;margin:0 0 6px;max-width:68ch}
+.reqkey{color:var(--muted);font-size:13px;margin:0 0 24px}
+
+.section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-top:20px}
+.section h2{font-size:20px;font-weight:600;margin:0 0 6px;display:flex;gap:10px;align-items:baseline}
+.section h2 .num{color:var(--accent);font-variant-numeric:tabular-nums}
+.section .help{color:var(--muted);font-size:14px;margin:0 0 18px}
+h3{font-size:16px;font-weight:600;margin:24px 0 12px}
+
+/* Intent cards */
+.intents{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border:0;margin:0;padding:0}
+.intent{position:relative;display:block;border:1px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;background:var(--surface);transition:border-color .15s, background-color .15s}
+.intent input{position:absolute;opacity:0;pointer-events:none}
+.intent .dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:grid;place-items:center;margin-bottom:12px;background:var(--surface)}
+.intent .t{font-weight:600;font-size:16px;display:block;margin-bottom:6px}
+.intent .d{color:var(--muted);font-size:14px;display:block}
+.intent:has(input:checked){border:2px solid var(--accent);padding:17px;background:var(--accent-soft)}
+.intent:has(input:checked) .dot{border-color:var(--accent)}
+.intent:has(input:checked) .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.intent:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+
+/* Fields */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid.name{grid-template-columns:110px 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field + .field, .grid + .field, .field + .grid, .grid + .grid{margin-top:16px}
+.lbl{font-size:14px;font-weight:500}
+.lbl .opt{color:var(--muted);font-weight:400}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],input[type=url],select,textarea{
+  width:100%;min-height:44px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}
+textarea{min-height:120px;resize:vertical}
+::placeholder{color:var(--ph)}
+.hint{font-size:12.5px;color:var(--muted)}
+.err{display:none;font-size:13px;color:var(--error)}
+.invalid input,.invalid select,.invalid textarea{border-color:var(--error);background:var(--error-bg)}
+.invalid .err{display:block}
+.phone{display:flex}
+.phone select{width:auto;flex:0 0 auto;border-radius:6px 0 0 6px;border-right:0}
+.phone input{border-radius:0 6px 6px 0}
+
+/* Content items */
+.item{background:var(--sub);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px}
+.item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.item-head b{font-weight:600}
+.item-head button{background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;padding:4px}
+.seg{display:flex;gap:8px;flex-wrap:wrap;border:0;padding:0;margin:0}
+.seg label{position:relative;border:1px solid var(--border);border-radius:6px;padding:9px 15px;cursor:pointer;background:var(--surface);font-size:14px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border:2px solid var(--accent);padding:8px 14px;color:var(--accent);font-weight:600;background:var(--accent-soft)}
+.seg label:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.add{border:1.5px dashed var(--accent);color:var(--accent);background:none;border-radius:6px;padding:11px 16px;font-weight:600;cursor:pointer}
+
+/* Checks & radios */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.group{background:var(--sub);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:0}
+.group legend{float:left;width:100%;font-weight:600;font-size:16px;margin-bottom:10px;padding:0}
+.chk,.rad{display:flex;align-items:flex-start;gap:10px;padding:6px 0;cursor:pointer;clear:both}
+.chk input,.rad input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.radios{display:flex;gap:8px 28px;flex-wrap:wrap;border:0;padding:0;margin:0}
+.radios legend{font-size:14px;font-weight:500;padding:0;margin-bottom:6px}
+.other-input{margin:4px 0 4px 28px;width:calc(100% - 28px)}
+.group.invalid{border-color:var(--error)}
+.usage-err{display:none;color:var(--error);font-size:13px;margin-top:10px}
+.usage-err.show{display:block}
+
+.info{background:var(--info-bg);color:var(--info-text);border-radius:8px;padding:14px 16px;font-size:14px;margin-top:20px}
+.plan{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:10px}
+.plan b{font-size:16px}
+.fee{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--muted);padding:3px 0}
+.fee span:last-child{color:var(--text);font-weight:600}
+.feebox{background:var(--sub);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+
+.consent .chk{padding:8px 0}
+.consent a{color:var(--accent);font-weight:600}
+.captcha{font-size:12px;color:var(--muted);margin:10px 0 0}
+.actions{display:flex;justify-content:flex-end;margin-top:20px}
+.primary{background:var(--accent);color:var(--on-accent);border:0;border-radius:6px;padding:14px 28px;font-weight:600;cursor:pointer;font-size:15px}
+.primary:hover{filter:brightness(1.06)}
+.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:13px 22px;font-weight:600;cursor:pointer}
+.form-err{display:none;background:var(--error-bg);color:var(--error);border-radius:8px;padding:12px 16px;margin-top:16px;font-size:14px}
+.form-err.show{display:block}
+
+/* Logic notes */
+.note{display:none;background:var(--note-bg);color:var(--note-text);border:1px dashed var(--note-border);border-radius:8px;padding:10px 14px;font-size:13px;margin:0 0 16px}
+body.notes .note{display:block}
+
+/* Confirmation */
+.confirm{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:36px;margin-top:8px}
+.tick{width:52px;height:52px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:26px;font-weight:700;margin-bottom:16px}
+.ref{display:inline-block;background:var(--sub);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-weight:600;font-variant-numeric:tabular-nums;margin:6px 0 18px}
+.summary{border-top:1px solid var(--border);margin-top:20px;padding-top:8px}
+.summary dl{display:grid;grid-template-columns:180px 1fr;gap:10px 16px;margin:12px 0 0}
+.summary dt{color:var(--muted);font-size:14px}
+.summary dd{margin:0}
+.next{margin:20px 0 0;padding-left:20px}
+.next li{margin:4px 0}
+.confirm .actions{justify-content:flex-start;gap:12px;flex-wrap:wrap}
+
+@media (max-width:720px){
+  main{padding:28px 14px 48px}
+  h1{font-size:28px}
+  .section{padding:20px}
+  .intents,.grid,.cols{grid-template-columns:1fr}
+  .grid.name{grid-template-columns:1fr 1fr}
+  .grid.name .field:first-child{grid-column:1 / -1;max-width:140px}
+  .summary dl{grid-template-columns:1fr}
+  .summary dt{margin-top:6px}
+  .site-header .help{margin-left:0;width:100%}
+  .proto .push{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="in">
+  <span class="logo">SPH Media</span><span class="sep" aria-hidden="true"></span>
+  <span class="tag">Content licensing and enquiries</span>
+  <span class="help">Helpdesk: (65) 6319 2333</span>
+</div></header>
+
+<div class="proto" role="region" aria-label="Prototype controls"><div class="in">
+  <strong>Prototype</strong>
+  <label>User arrives from
+    <select id="entry">
+      <option value="article">a Straits Times article page</option>
+      <option value="photo">a Newslink photo page</option>
+      <option value="direct">nowhere (direct visit)</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="notesToggle"> Show logic notes</label>
+  <div class="push">
+    <button class="btn-link" type="button" id="fillDemo">Fill contact details</button>
+    <button class="btn-link" type="button" id="resetBtn">Reset</button>
+  </div>
+</div></div>
+
+<main>
+<div id="formView">
+  <h1>Content enquiry form</h1>
+  <p class="lede">Request to license, reprint or keep SPH Media articles, photos and pages, or ask about a Newslink subscription. We’ll reply with a quote within 3 working days. No payment is taken on this form.</p>
+  <p class="reqkey">* Required</p>
+
+  <form id="form" novalidate>
+    <section class="section" id="s-intent">
+      <h2><span class="num"></span>What would you like to do?</h2>
+      <p class="help">Choose one. We’ll only ask the questions that apply.</p>
+      <div class="note">Routes the enquiry to Content Licensing, Keepsakes &amp; Prints, or Newslink Sales, and controls which sections appear below.</div>
+      <fieldset class="intents">
+        <legend class="sr" style="position:absolute;left:-9999px">Enquiry type</legend>
+        <label class="intent"><input type="radio" name="intent" value="license" checked><span class="dot"></span><span class="t">License content for reuse</span><span class="d">For business, organisation or public use in digital or print.</span></label>
+        <label class="intent"><input type="radio" name="intent" value="keepsake"><span class="dot"></span><span class="t">Buy a personal keepsake</span><span class="d">A printed copy or PDF of an article, photo or page for yourself.</span></label>
+        <label class="intent"><input type="radio" name="intent" value="subscription"><span class="dot"></span><span class="t">Newslink subscription</span><span class="d">Ask about a plan for archive access. Our sales team will follow up.</span></label>
+      </fieldset>
+    </section>
+
+    <section class="section" id="s-content" data-for="license keepsake">
+      <h2><span class="num"></span>Content details</h2>
+      <p class="help">Prefilled when you start from an article or photo page. Add more than one item if you need to.</p>
+      <div class="note">Prefilled from URL parameters on the source page. Source platform, content ID and referrer URL are sent as hidden fields, replacing the old “Access from” row. Try the “User arrives from” control above.</div>
+      <div id="items"></div>
+      <button type="button" class="add" id="addItem">+ Add another item</button>
+    </section>
+
+    <section class="section" id="s-usage" data-for="license">
+      <h2><span class="num"></span>How will you use the content?</h2>
+      <p class="help">Select all that apply. We’ll quote based on your usage.</p>
+      <div class="note">Checkboxes, not radios, so one enquiry can cover several uses. Ticking “Others” reveals a text field. Print run quantity appears only when a Print option is ticked.</div>
+      <div class="cols">
+        <fieldset class="group" id="g-digital">
+          <legend>Digital</legend>
+          <label class="chk"><input type="checkbox" name="usage" value="News Post">News Post</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Posting on website">Posting on website</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Posting on social media">Posting on social media</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Feature in video">Feature in video</label>
+          <label class="chk"><input type="checkbox" name="usage" value="PPT presentation">PPT presentation</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Digital exhibition">Digital exhibition</label>
+          <label class="chk"><input type="checkbox" name="usage" value="E-Newsletter">E-Newsletter</label>
+          <label class="chk"><input type="checkbox" name="usage" value="e-book">e-book</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Digital: Others" data-other="otherDigital">Others</label>
+          <div class="field" hidden id="otherDigitalWrap"><input type="text" class="other-input" id="otherDigital" placeholder="Please specify" aria-label="Other digital use" data-req data-err="Describe the other digital use."><span class="err" style="margin-left:28px"></span></div>
+        </fieldset>
+        <fieldset class="group" id="g-print">
+          <legend>Print</legend>
+          <label class="chk"><input type="checkbox" name="usage" value="Plaques" data-print>Plaques</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Books" data-print>Books</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Posters" data-print>Posters</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Exhibition/Display" data-print>Exhibition/Display</label>
+          <label class="chk"><input type="checkbox" name="usage" value="Print: Others" data-print data-other="otherPrint">Others</label>
+          <div class="field" hidden id="otherPrintWrap"><input type="text" class="other-input" id="otherPrint" placeholder="Please specify, e.g. event backdrop" aria-label="Other print use" data-req data-err="Describe the other print use."><span class="err" style="margin-left:28px"></span></div>
+        </fieldset>
+      </div>
+      <p class="usage-err" id="usageErr">Select at least one way you’ll use the content.</p>
+
+      <h3>Usage details</h3>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="uStart">Usage start date *</label><input type="date" id="uStart" data-req data-err="Enter a start date."><span class="err"></span></div>
+        <div class="field"><label class="lbl" for="uDur">Duration *</label>
+          <select id="uDur" data-req data-err="Choose a duration."><option value="">Select</option><option>One-off / single use</option><option>Up to 3 months</option><option>6 months</option><option>12 months</option><option>Perpetual</option></select><span class="err"></span></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="uTerr">Territory or audience *</label>
+          <select id="uTerr" data-req data-err="Choose a territory."><option value="">Select</option><option>Singapore</option><option>Southeast Asia</option><option>Asia-Pacific</option><option>Worldwide</option><option>Internal staff only</option></select><span class="err"></span></div>
+        <div class="field" id="printRunWrap" hidden><label class="lbl" for="uRun">Print run quantity *</label><input type="number" min="1" id="uRun" placeholder="e.g. 500" data-req data-err="Enter how many copies you’ll print."><span class="hint">Shown because you ticked a Print option.</span><span class="err"></span></div>
+      </div>
+      <div class="field" style="margin-top:18px">
+        <fieldset class="radios" id="commercial">
+          <legend>Is this for commercial use? *</legend>
+          <label class="rad"><input type="radio" name="commercial" value="Commercial">Yes, commercial</label>
+          <label class="rad"><input type="radio" name="commercial" value="Non-commercial">No, non-commercial or internal</label>
+        </fieldset>
+        <span class="err">Tell us whether this is commercial use.</span>
+      </div>
+      <div class="info">Fees depend on usage, duration and reach. We’ll send a quote with licensing fees and GST. Nothing is charged until you accept it.</div>
+    </section>
+
+    <section class="section" id="s-keepsake" data-for="keepsake">
+      <h2><span class="num"></span>Keepsake details</h2>
+      <p class="help">Tell us the format you’d like. We’ll confirm the price, including GST and any postage.</p>
+      <div class="note">Replaces the old image size and price table. Receive mode appears only for printed copies, and registered mail reveals the address fields in Contact details.</div>
+      <div class="field">
+        <fieldset class="radios" id="kFormat">
+          <legend>Format *</legend>
+          <label class="rad"><input type="radio" name="kFormat" value="Printed copy" checked>Printed copy</label>
+          <label class="rad"><input type="radio" name="kFormat" value="Digital copy (PDF)">Digital copy (PDF)</label>
+        </fieldset>
+      </div>
+      <div class="grid" style="margin-top:16px">
+        <div class="field"><label class="lbl" for="kQty">Quantity *</label><input type="number" min="1" id="kQty" value="1" data-req data-err="Enter a quantity of at least 1."><span class="err"></span></div>
+        <div></div>
+      </div>
+      <div class="field" id="receiveWrap" style="margin-top:18px">
+        <fieldset class="radios">
+          <legend>How would you like to receive it? *</legend>
+          <label class="rad"><input type="radio" name="kReceive" value="Self-collection" checked>Self-collection</label>
+          <label class="rad"><input type="radio" name="kReceive" value="Registered mail">Delivery by registered mail</label>
+        </fieldset>
+        <span class="hint" id="collectHint">Collect from SPH Media, 1000 Toa Payoh North, Singapore 318994. Mon–Fri, 9am–5pm.</span>
+      </div>
+    </section>
+
+    <section class="section" id="s-sub" data-for="subscription">
+      <h2><span class="num"></span>Subscription details</h2>
+      <p class="help">Our sales team will confirm the plan and send an invoice. You won’t create a password or pay here.</p>
+      <div class="note">Replaces the old sign-up form: no password, no card, no cheque option. The login is set up after Sales confirms the subscription.</div>
+      <div class="feebox">
+        <div class="plan"><b>Premium</b><span><b>S$1,200.00</b> / year</span></div>
+        <div class="fee"><span>Article retrieval fee</span><span>S$3.00 per article</span></div>
+        <div class="fee"><span>Full-page PDF retrieval</span><span>Not included</span></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="sPlan">Plan *</label>
+          <select id="sPlan" data-req data-err="Choose a plan."><option value="">Select</option><option>Premium</option><option>Not sure yet, please advise</option></select><span class="err"></span></div>
+        <div class="field"><label class="lbl" for="sUsers">Number of users *</label>
+          <select id="sUsers" data-req data-err="Choose the number of users."><option value="">Select</option><option>1</option><option>2–5</option><option>6–20</option><option>More than 20</option></select><span class="err"></span></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="sStart">Preferred start date <span class="opt">(optional)</span></label><input type="date" id="sStart"></div>
+        <div></div>
+      </div>
+    </section>
+
+    <section class="section" id="s-contact">
+      <h2><span class="num"></span>Contact details</h2>
+      <div class="note" id="contactNote">Company is optional for keepsakes. Address and postal code appear only for registered mail delivery or subscription invoicing.</div>
+      <div class="grid name">
+        <div class="field"><label class="lbl" for="cTitle">Title <span class="opt">(optional)</span></label>
+          <select id="cTitle"><option value=""></option><option>Mr</option><option>Ms</option><option>Mrs</option><option>Mdm</option><option>Dr</option></select></div>
+        <div class="field"><label class="lbl" for="cFirst">First name *</label><input type="text" id="cFirst" autocomplete="given-name" data-req data-err="Enter your first name."><span class="err"></span></div>
+        <div class="field"><label class="lbl" for="cLast">Last name *</label><input type="text" id="cLast" autocomplete="family-name" data-req data-err="Enter your last name."><span class="err"></span></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="cEmail">Email *</label><input type="email" id="cEmail" autocomplete="email" placeholder="name@company.com" data-req data-type="email" data-err="Enter an email address like name@company.com."><span class="err"></span></div>
+        <div class="field"><label class="lbl" for="cPhone">Phone *</label>
+          <div class="phone"><select aria-label="Country code" id="cCode"><option>+65</option><option>+60</option><option>+62</option><option>+63</option><option>+66</option><option>+84</option><option>+86</option><option>+852</option><option>+91</option><option>+61</option><option>+44</option><option>+1</option></select>
+          <input type="tel" id="cPhone" autocomplete="tel-national" placeholder="8123 4567" data-req data-err="Enter a phone number."></div><span class="err"></span></div>
+      </div>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="cCompany" id="companyLbl">Company or organisation *</label><input type="text" id="cCompany" autocomplete="organization" data-req data-err="Enter your company or organisation."><span class="err"></span></div>
+        <div class="field"><label class="lbl" for="cCountry">Country *</label>
+          <select id="cCountry" data-req data-err="Choose a country."><option>Singapore</option><option>Malaysia</option><option>Indonesia</option><option>Philippines</option><option>Thailand</option><option>Vietnam</option><option>China</option><option>Hong Kong</option><option>India</option><option>Australia</option><option>United Kingdom</option><option>United States</option><option>Other</option></select><span class="err"></span></div>
+      </div>
+      <div id="addressWrap" hidden>
+        <div class="field" style="margin-top:16px"><label class="lbl" for="cAddr">Address *</label><input type="text" id="cAddr" autocomplete="street-address" data-req data-err="Enter your address."><span class="hint" id="addrHint"></span><span class="err"></span></div>
+        <div class="grid"><div class="field"><label class="lbl" for="cPostal">Postal code *</label><input type="text" id="cPostal" autocomplete="postal-code" inputmode="numeric" data-req data-err="Enter your postal code."><span class="err"></span></div><div></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="s-extra">
+      <h2><span class="num"></span>Anything else?</h2>
+      <div class="field"><label class="lbl" for="msg">Message <span class="opt">(optional)</span></label><textarea id="msg" placeholder="e.g. deadline, where it will appear, other print sizes or formats"></textarea></div>
+      <div class="grid"><div class="field"><label class="lbl" for="promo">Promo code <span class="opt">(optional)</span></label><input type="text" id="promo"></div><div></div></div>
+    </section>
+
+    <section class="section consent" id="s-consent">
+      <h2><span class="num"></span>Consent</h2>
+      <div class="note">Both boxes start unticked (PDPA). Marketing consent is separate and optional. reCAPTCHA v3 runs invisibly, so there’s no “I’m not a robot” step.</div>
+      <div class="field" id="tosWrap">
+        <label class="chk"><input type="checkbox" id="tos"><span>I agree to the <a href="#" onclick="return false">Terms of Service</a> and consent to SPH Media using my details to handle this enquiry under its <a href="#" onclick="return false">Data Protection Policy</a>. *</span></label>
+        <span class="err">Tick to agree before sending your enquiry.</span>
+      </div>
+      <label class="chk"><input type="checkbox" id="mkt"><span>Send me occasional updates on SPH Media content and licensing offers. <span class="opt" style="color:var(--muted)">(optional)</span></span></label>
+      <p class="captcha">Protected by reCAPTCHA. Google’s Privacy Policy and Terms of Service apply.</p>
+      <div class="form-err" id="formErr" role="alert"></div>
+      <div class="actions"><button type="submit" class="primary">Send enquiry</button></div>
+    </section>
+  </form>
+</div>
+
+<div id="doneView" hidden>
+  <div class="confirm" tabindex="-1" id="confirmBox">
+    <div class="tick" aria-hidden="true">✓</div>
+    <h1>Enquiry sent</h1>
+    <p class="lede" id="doneLede"></p>
+    <div class="ref" id="ref"></div>
+    <ol class="next" id="nextSteps"></ol>
+    <div class="summary"><h3 style="margin-top:16px">What you sent</h3><dl id="summary"></dl></div>
+    <div class="actions"><button class="primary" type="button" id="againBtn">Start another enquiry</button><button class="secondary" type="button" id="editBtn">Back to the form</button></div>
+  </div>
+</div>
+</main>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
+  const PUBS = ['The Straits Times','The Business Times','tabla!','Lianhe Zaobao','Shin Min Daily News','Berita Harian','Tamil Murasu'];
+  const PREFILL = {
+    article:{type:'Article',pub:'The Straits Times',date:'2026-03-12',head:'Rich nations should foot climate bill, says Nepal minister',link:'https://www.straitstimes.com/world/rich-nations-should-foot-climate-bill'},
+    photo:{type:'Photo',pub:'The Business Times',date:'2026-05-04',head:'Certificate of entitlement (COE) prices for vehicles.',link:''},
+    direct:null
+  };
+  let itemCount = 0;
+
+  function itemHTML(n, d){
+    d = d || {};
+    const opts = ['<option value="">Select</option>'].concat(PUBS.map(p=>`<option${p===d.pub?' selected':''}>${p}</option>`)).join('');
+    const type = d.type || 'Article';
+    const seg = ['Article','Photo','Full-page PDF'].map(t=>`<label><input type="radio" name="type${n}" value="${t}"${t===type?' checked':''}>${t}</label>`).join('');
+    return `<div class="item" data-n="${n}">
+      <div class="item-head"><b>Item ${n}</b><button type="button" class="rm">Remove</button></div>
+      <div class="field"><fieldset class="seg"><legend class="lbl" style="padding:0;margin-bottom:6px;float:left;width:100%">Content type *</legend>${seg}</fieldset></div>
+      <div class="grid">
+        <div class="field"><label class="lbl" for="pub${n}">Publication *</label><select id="pub${n}" class="pub" data-req data-err="Choose a publication.">${opts}</select><span class="err"></span></div>
+        <div class="field"><label class="lbl" for="date${n}">Publication date *</label><input type="date" id="date${n}" class="date" value="${d.date||''}" data-req data-err="Enter the publication date."><span class="err"></span></div>
+      </div>
+      <div class="field"><label class="lbl" for="head${n}">Headline or photo caption *</label><input type="text" id="head${n}" class="head" value="${(d.head||'').replace(/"/g,'&quot;')}" data-req data-err="Enter the headline or caption so we can find it."><span class="err"></span></div>
+      <div class="field"><label class="lbl" for="link${n}">Link to content <span class="opt">(optional)</span></label><input type="url" id="link${n}" class="link" value="${d.link||''}" placeholder="https://"></div>
+    </div>`;
+  }
+  function renumberItems(){
+    const items = $$('#items .item');
+    items.forEach((it,i)=>{ it.querySelector('.item-head b').textContent = 'Item ' + (i+1); it.querySelector('.rm').hidden = items.length === 1; });
+  }
+  function addItem(d){
+    itemCount++;
+    $('#items').insertAdjacentHTML('beforeend', itemHTML(itemCount, d));
+    renumberItems();
+  }
+  function loadItems(){
+    $('#items').innerHTML=''; itemCount=0;
+    addItem(PREFILL[$('#entry').value]);
+  }
+
+  function intent(){ return $('input[name=intent]:checked').value; }
+
+  function update(){
+    const it = intent();
+    $$('[data-for]').forEach(s=>{ s.hidden = !s.dataset.for.split(' ').includes(it); });
+    let n=0; $$('.section').forEach(s=>{ if(!s.hidden){ n++; s.querySelector('.num').textContent = n; } });
+    // others
+    $$('input[data-other]').forEach(c=>{ $('#'+c.dataset.other+'Wrap').hidden = !c.checked; });
+    // print run
+    $('#printRunWrap').hidden = !$$('input[data-print]').some(c=>c.checked);
+    // keepsake receive
+    const printed = $('input[name=kFormat]:checked').value === 'Printed copy';
+    $('#receiveWrap').hidden = !printed;
+    const mail = $('input[name=kReceive]:checked').value === 'Registered mail';
+    $('#collectHint').hidden = mail;
+    // address
+    const needAddr = it === 'subscription' || (it === 'keepsake' && printed && mail);
+    $('#addressWrap').hidden = !needAddr;
+    $('#addrHint').textContent = it === 'subscription' ? 'Used for your invoice.' : 'We’ll post your keepsake here by registered mail.';
+    // company optional for keepsake
+    const comp = $('#cCompany');
+    if(it === 'keepsake'){ comp.removeAttribute('data-req'); $('#companyLbl').innerHTML = 'Company or organisation <span class="opt">(optional)</span>'; comp.closest('.field').classList.remove('invalid'); }
+    else { comp.setAttribute('data-req',''); $('#companyLbl').textContent = 'Company or organisation *'; }
+  }
+
+  function isHidden(el){ return !!el.closest('[hidden]'); }
+  function validate(){
+    let first = null, count = 0;
+    const mark = (wrap, bad, focusEl) => { wrap.classList.toggle('invalid', bad); if(bad){ count++; if(!first) first = focusEl; } };
+    $$('[data-req]').forEach(el=>{
+      const wrap = el.closest('.field'); if(!wrap) return;
+      if(isHidden(el)){ wrap.classList.remove('invalid'); return; }
+      let v = el.value.trim(), bad = !v;
+      if(!bad && el.dataset.type==='email') bad = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      if(!bad && el.type==='number') bad = Number(v) < 1;
+      const err = wrap.querySelector('.err'); if(err && el.dataset.err) err.textContent = el.dataset.err;
+      mark(wrap, bad, el);
+    });
+    // usage
+    if(intent()==='license'){
+      const none = !$$('input[name=usage]').some(c=>c.checked);
+      $('#usageErr').classList.toggle('show', none);
+      $('#g-digital').classList.toggle('invalid', none); $('#g-print').classList.toggle('invalid', none);
+      if(none){ count++; if(!first) first = $('#g-digital input'); }
+      const cw = $('#commercial').closest('.field');
+      mark(cw, !$('input[name=commercial]:checked'), $('#commercial input'));
+    } else { $('#usageErr').classList.remove('show'); $('#g-digital').classList.remove('invalid'); $('#g-print').classList.remove('invalid'); }
+    mark($('#tosWrap'), !$('#tos').checked, $('#tos'));
+    const fe = $('#formErr');
+    fe.classList.toggle('show', count>0);
+    fe.textContent = count ? (count===1 ? '1 thing needs your attention before you can send this enquiry.' : count + ' things need your attention before you can send this enquiry.') : '';
+    if(first){ first.focus({preventScroll:true}); first.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'}); }
+    return count===0;
+  }
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function showDone(){
+    const it = intent();
+    const team = {license:'Content Licensing team', keepsake:'Keepsakes & Prints team', subscription:'Newslink Sales team'}[it];
+    const ref = 'SPH-' + {license:'LIC',keepsake:'KPS',subscription:'SUB'}[it] + '-' + String(Math.floor(100000+Math.random()*900000));
+    $('#ref').textContent = 'Reference ' + ref;
+    $('#doneLede').textContent = `Thanks, ${$('#cFirst').value.trim()}. Your enquiry has gone to our ${team}. We’ve emailed a copy to ${$('#cEmail').value.trim()}.`;
+    const steps = {
+      license:['We review your usage and send a quote with licensing fees and GST within 3 working days.','Accept the quote and pay through the secure payment link in the email.','We send the licence and the content files.'],
+      keepsake:['We confirm the price, including GST and any postage, within 3 working days.','Pay through the secure payment link in the email.', $('input[name=kFormat]:checked').value==='Printed copy' ? ($('input[name=kReceive]:checked').value==='Registered mail' ? 'We post your keepsake by registered mail.' : 'We email you when it’s ready to collect.') : 'We email you the PDF.'],
+      subscription:['A sales executive contacts you within 3 working days to confirm your plan.','We send an invoice. Pay by bank transfer or the payment link provided.','You receive an email to activate your Newslink login.']
+    }[it];
+    $('#nextSteps').innerHTML = steps.map(s=>`<li>${esc(s)}</li>`).join('');
+    const rows = [['Enquiry type', {license:'License content for reuse',keepsake:'Personal keepsake',subscription:'Newslink subscription'}[it]]];
+    if(it!=='subscription'){
+      const items = $$('#items .item').map(x=>`${x.querySelector('input[type=radio]:checked').value}: “${x.querySelector('.head').value.trim()}”, ${x.querySelector('.pub').value}`);
+      rows.push(['Content', items.join('\n')]);
+    }
+    if(it==='license'){
+      const u = $$('input[name=usage]:checked').map(c=>{ let v=c.value; if(c.dataset.other){ v += ' (' + $('#'+c.dataset.other).value.trim() + ')'; } return v; });
+      rows.push(['Usage', u.join(', ')]);
+      let d = `${$('#uDur').value}, ${$('#uTerr').value}, ${$('input[name=commercial]:checked').value.toLowerCase()}`;
+      if(!$('#printRunWrap').hidden) d += `, print run of ${$('#uRun').value}`;
+      rows.push(['Usage details', d]);
+    }
+    if(it==='keepsake'){
+      let k = `${$('#kQty').value} × ${$('input[name=kFormat]:checked').value.toLowerCase()}`;
+      if(!$('#receiveWrap').hidden) k += `, ${$('input[name=kReceive]:checked').value.toLowerCase()}`;
+      rows.push(['Keepsake', k]);
+    }
+    if(it==='subscription') rows.push(['Plan', `${$('#sPlan').value}, ${$('#sUsers').value} user(s)`]);
+    rows.push(['Contact', `${[$('#cTitle').value,$('#cFirst').value.trim(),$('#cLast').value.trim()].filter(Boolean).join(' ')}\n${$('#cEmail').value.trim()}\n${$('#cCode').value} ${$('#cPhone').value.trim()}${$('#cCompany').value.trim()?'\n'+$('#cCompany').value.trim():''}`]);
+    if(!$('#addressWrap').hidden) rows.push(['Address', `${$('#cAddr').value.trim()}, ${$('#cCountry').value} ${$('#cPostal').value.trim()}`]);
+    if($('#msg').value.trim()) rows.push(['Message', $('#msg').value.trim()]);
+    $('#summary').innerHTML = rows.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v).replace(/\n/g,'<br>')}</dd>`).join('');
+    $('#formView').hidden = true; $('#doneView').hidden = false;
+    window.scrollTo(0,0); $('#confirmBox').focus();
+  }
+
+  // Events
+  $('#form').addEventListener('change', e=>{
+    update();
+    const f = e.target.closest('.field'); if(f && f.classList.contains('invalid')){ /* re-check lightly */ if(e.target.value || e.target.checked) f.classList.remove('invalid'); }
+    if(e.target.name==='usage' && $$('input[name=usage]').some(c=>c.checked)){ $('#usageErr').classList.remove('show'); $('#g-digital').classList.remove('invalid'); $('#g-print').classList.remove('invalid'); }
+  });
+  $('#form').addEventListener('input', e=>{ const f=e.target.closest('.field'); if(f && e.target.value.trim()) f.classList.remove('invalid'); });
+  $('#items').addEventListener('click', e=>{ if(e.target.classList.contains('rm')){ e.target.closest('.item').remove(); renumberItems(); } });
+  $('#addItem').addEventListener('click', ()=>{ addItem(); const last=$$('#items .item').pop(); last.querySelector('.pub').focus(); });
+  $('#form').addEventListener('submit', e=>{ e.preventDefault(); if(validate()) showDone(); });
+  $('#entry').addEventListener('change', ()=>{ loadItems(); if($('#entry').value==='photo'){ $('input[name=intent][value=keepsake]').checked = true; } else if($('#entry').value==='article'){ $('input[name=intent][value=license]').checked = true; } update(); });
+  $('#notesToggle').addEventListener('change', e=>{ document.body.classList.toggle('notes', e.target.checked); });
+  $('#fillDemo').addEventListener('click', ()=>{
+    $('#cTitle').value='Ms'; $('#cFirst').value='Rachel'; $('#cLast').value='Tan'; $('#cEmail').value='rachel.tan@example.com'; $('#cPhone').value='8123 4567'; $('#cCompany').value='Harbourfront Events Pte Ltd';
+    if(!$('#addressWrap').hidden){ $('#cAddr').value='10 Anson Road, #12-01'; $('#cPostal').value='079903'; }
+    $$('#s-contact .field').forEach(f=>f.classList.remove('invalid'));
+  });
+  function reset(){ $('#form').reset(); $('#formView').hidden=false; $('#doneView').hidden=true; $$('.invalid').forEach(x=>x.classList.remove('invalid')); $('#formErr').classList.remove('show'); $('#usageErr').classList.remove('show'); loadItems(); if($('#entry').value==='photo') $('input[name=intent][value=keepsake]').checked=true; update(); window.scrollTo(0,0); }
+  $('#resetBtn').addEventListener('click', reset);
+  $('#againBtn').addEventListener('click', reset);
+  $('#editBtn').addEventListener('click', ()=>{ $('#formView').hidden=false; $('#doneView').hidden=true; window.scrollTo(0,0); });
+
+  loadItems(); update();
+})();
+</script>
+</body>
+</html>
