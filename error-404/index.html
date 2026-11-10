@@ -81,109 +81,136 @@
     .radio { container-type: inline-size; width: min(100%, 1100px); }
     .panel {
       --u: calc(100cqw / 1700);
-      position: relative; aspect-ratio: 1700 / 912;
+      /* Display bottom = 358u + 30px (its fixed-px status line + divider); grilles sit 48px below it */
+      --grill-top: calc(var(--u) * 358 + 30px + 48px);
+      position: relative; height: calc(var(--grill-top) + var(--u) * 476);
       border-radius: calc(var(--u) * 28);
     }
 
-    /* Display — layout/text from Figma node 10642:4787 (1px ≈ 1.29u),
-       surface is the grey recessed panel. */
+    /* Display — tuner window from 'display-radio-404': sage screen, dark bezel,
+       frequency scale running off the bottom edge. Scale parts are sized in --s. */
     .display {
+      --s: var(--u);
       position: absolute; left: calc(var(--u) * 432); top: calc(var(--u) * 83);
       width: calc(var(--u) * 836);
       display: flex; flex-direction: column; gap: calc(var(--u) * 21);
-      padding: calc(var(--u) * 31);
-      border-radius: calc(var(--u) * 42);
-      border: calc(var(--u) * 2) solid rgba(255, 255, 255, .75);
-      background: linear-gradient(180deg, #d1d1d4, #d8d8da);
+      padding: calc(var(--u) * 31) calc(var(--u) * 31) 0;
+      border-radius: calc(var(--u) * 22);
+      border: calc(var(--u) * 2.5) solid #7f7f84;
+      background: #dfe6e3;
+      /* Recessed (neumorphic) window: deep shadow from the top-left, light catching the lower-right
+         inner edge, and a raised lip around the bezel */
       box-shadow:
-        inset 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(62, 62, 70, .22),
-        inset 0 calc(var(--u) * -2) calc(var(--u) * 3) rgba(255, 255, 255, .8),
-        0 calc(var(--u) * 2) calc(var(--u) * 2) rgba(255, 255, 255, .9);
+        inset calc(var(--u) * 10) calc(var(--u) * 14) calc(var(--u) * 26) rgba(40, 50, 45, .34),
+        inset calc(var(--u) * 3) calc(var(--u) * 5) calc(var(--u) * 6) rgba(40, 50, 45, .22),
+        inset calc(var(--u) * -8) calc(var(--u) * -10) calc(var(--u) * 20) rgba(255, 255, 255, .75),
+        calc(var(--u) * -6) calc(var(--u) * -6) calc(var(--u) * 14) rgba(255, 255, 255, .85),
+        calc(var(--u) * 6) calc(var(--u) * 8) calc(var(--u) * 16) rgba(56, 56, 64, .18);
+      overflow: hidden; -webkit-user-select: none; user-select: none;
     }
-    .display::before {
-      content: ""; position: absolute; inset: calc(var(--u) * 4);
-      border-radius: calc(var(--u) * 38); border: 1px solid rgba(112, 112, 120, .25); pointer-events: none;
-    }
+    .display.is-tuned { cursor: pointer; } /* while tuned to a station, clicking the display opens it */
     .display__title {
       display: flex; align-items: flex-start; justify-content: space-between; gap: calc(var(--u) * 21);
-      font-weight: 600; font-size: calc(var(--u) * 32); line-height: calc(var(--u) * 38);
+      font-weight: 600; font-size: calc(var(--u) * 38); line-height: calc(var(--u) * 46);
       color: var(--alert-strong); white-space: nowrap;
     }
     .display__title > * { font: inherit; }
+    /* Tuned to a station: the title becomes its tagline, in black, and the 404 steps aside */
+    .display.is-tuned .display__title { color: #000; justify-content: center; text-align: center; }
+    .display.is-tuned .display__code { display: none; }
     .display__divider { width: 100%; height: 1px; }
     .display__status {
-      font-weight: 600; font-size: 20px; line-height: 24px; /* fixed size, doesn't scale with the radio */
+      font-weight: 600; font-size: 24px; line-height: 29px; /* fixed size, doesn't scale with the radio */
       color: var(--page-text); white-space: nowrap; text-align: center;
     }
 
+    /* Frequency scale: the whole 88–102 MHz band fits the display; ticks every 0.4 MHz, numbers every 2 MHz */
+    .scale { position: relative; height: calc(var(--s) * 128); margin: calc(var(--s) * 4) calc(var(--s) * 20) 0; }
+    .scale > * { position: absolute; transform: translateX(-50%); }
+    .scale__label { top: calc(var(--s) * 20); font-weight: 500; font-size: calc(var(--s) * 22); line-height: calc(var(--s) * 26); color: var(--page-text); }
+    .scale__tick { bottom: 0; width: calc(var(--s) * 2.5); height: calc(var(--s) * 28); background: var(--harmony-700); }
+    .scale__tick--long { height: calc(var(--s) * 52); }
+    .scale__needle { bottom: 0; z-index: 1; width: calc(var(--s) * 3); height: calc(var(--s) * 60); background: #e0201b; pointer-events: none; }
+    /* Pointer triangle: moves with the needle, above the numbers and below the status */
+    .scale__pointer {
+      top: 0; z-index: 1; pointer-events: none;
+      border: calc(var(--s) * 9) solid transparent; border-bottom: 0; border-top: calc(var(--s) * 14) solid #e0201b;
+    }
+    /* Station markers: 3px lines in the station's colour */
+    .scale__station { bottom: 0; width: 3px; height: calc(var(--s) * 52); cursor: pointer; }
+
     .grill {
-      position: absolute; top: calc(var(--u) * 377); display: grid;
-      grid-template-columns: repeat(9, calc(var(--u) * 30)); gap: calc(var(--u) * 16.2) calc(var(--u) * 16.25);
+      position: absolute; top: var(--grill-top); display: grid;
+      grid-template-columns: repeat(11, calc(var(--u) * 30)); gap: calc(var(--u) * 16.2) calc(var(--u) * 16.25);
     }
     .grill.l { left: calc(var(--u) * 68); }
-    .grill.r { left: calc(var(--u) * 1231); }
+    .grill.r { left: calc(var(--u) * 1139.5); } /* 11 columns, mirrored: ends at 1632 like the left starts at 68 */
     .grill i {
       width: calc(var(--u) * 30); height: calc(var(--u) * 30); border-radius: 50%; background: var(--hole);
       box-shadow: inset calc(var(--u) * 2) calc(var(--u) * 3) calc(var(--u) * 4) var(--sh), calc(var(--u) * 1) calc(var(--u) * 2) calc(var(--u) * 2) var(--hl);
     }
 
-    .dial {
-      position: absolute; left: calc(var(--u) * 595); top: calc(var(--u) * 330);
-      width: calc(var(--u) * 510); aspect-ratio: 1; border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #e4e4e6, #d8d8da 70%);
-      box-shadow:
-        calc(var(--u) * 10) calc(var(--u) * 16) calc(var(--u) * 26) rgba(56, 56, 64, .28),
-        calc(var(--u) * -10) calc(var(--u) * -12) calc(var(--u) * 24) var(--hl),
-        inset 0 calc(var(--u) * 2) calc(var(--u) * 2) rgba(255, 255, 255, .8);
-    }
-    .dial { cursor: crosshair; touch-action: none; -webkit-user-select: none; user-select: none; }
-    .dial:focus-visible { outline: 2px solid var(--btn-primary); outline-offset: 6px; }
-    /* Grows 50% from the middle of its flat edge, so it stays seated on ring a */
-    .dial__station { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .2s ease; }
-    .dial__station.is-on { transform: scale(1.5); }
-    .dial__station, .dial.is-tuned { cursor: pointer; } /* anywhere in a station's snap zone links to it */
-    .dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-    .dial text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 500; fill: #2e2e34; font-size: 21px; text-anchor: middle; dominant-baseline: middle; }
-    .ring { pointer-events: none; position: absolute; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 1px rgba(255, 255, 255, .9), inset 0 1px 1px rgba(255, 255, 255, .9); }
-    .ring.a { width: 72%; height: 72%; border: 1px solid rgba(104, 104, 112, .35); }
-    .ring.b { width: 62.5%; height: 62.5%; border: 1px solid rgba(104, 104, 112, .3); }
-    .ring.c { width: 52%; height: 52%; border: 1px solid rgba(104, 104, 112, .25); }
+    /* Tuning knob — Braun-style plain light disc with a soft drop shadow. Turn it to tune;
+       only the inner face (with its small dimple) rotates, so lighting and shadow stay put. */
+    .tuner { position: absolute; left: calc(var(--u) * 850); top: calc(var(--grill-top) + var(--u) * 126); transform: translateX(-50%); }
     .knob {
-      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      width: 47.5%; height: 47.5%; border-radius: 50%;
-      background: radial-gradient(circle at 38% 28%, #f4f4f5 0%, #e5e5e7 45%, #d5d5d8 100%);
+      position: relative;
+      width: calc(var(--u) * 195); aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle at 42% 36%, #f3f3f4 0%, #e8e8ea 55%, #dadadd 100%);
       box-shadow:
-        calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 12) rgba(56, 56, 64, .3),
-        calc(var(--u) * -3) calc(var(--u) * -4) calc(var(--u) * 8) rgba(255, 255, 255, .9),
-        inset calc(var(--u) * -4) calc(var(--u) * -8) calc(var(--u) * 14) rgba(84, 84, 92, .14);
+        calc(var(--u) * 8) calc(var(--u) * 16) calc(var(--u) * 22) rgba(56, 56, 64, .3),
+        calc(var(--u) * -4) calc(var(--u) * -5) calc(var(--u) * 10) rgba(255, 255, 255, .85),
+        inset calc(var(--u) * -3) calc(var(--u) * -6) calc(var(--u) * 8) rgba(84, 84, 92, .12),
+        inset calc(var(--u) * 2) calc(var(--u) * 3) calc(var(--u) * 3) rgba(255, 255, 255, .9);
+      cursor: grab; touch-action: none; transition: transform .15s ease, box-shadow .15s ease;
     }
+    .knob__face { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
+    .knob__face::after { /* grip dimple near the rim */
+      content: ""; position: absolute; left: 50%; top: 9%; transform: translateX(-50%);
+      width: 7%; aspect-ratio: 1; border-radius: 50%; background: #e2e2e5;
+      box-shadow: inset 0 calc(var(--u) * 2) calc(var(--u) * 3) rgba(62, 62, 70, .3), 0 1px 0 rgba(255, 255, 255, .9);
+    }
+    .knob:active {
+      cursor: grabbing; transform: scale(.98);
+      box-shadow:
+        calc(var(--u) * 4) calc(var(--u) * 8) calc(var(--u) * 12) rgba(56, 56, 64, .3),
+        calc(var(--u) * -3) calc(var(--u) * -4) calc(var(--u) * 8) rgba(255, 255, 255, .85),
+        inset calc(var(--u) * -3) calc(var(--u) * -6) calc(var(--u) * 8) rgba(84, 84, 92, .14),
+        inset calc(var(--u) * 2) calc(var(--u) * 3) calc(var(--u) * 3) rgba(255, 255, 255, .9);
+    }
+    .knob:focus-visible { outline: 2px solid #818188; outline-offset: 6px; }
 
     /* ---------- Footer ---------- */
     .footer { background: #fff; padding: 40px 16px; display: flex; justify-content: center; }
     .footer p { width: 100%; max-width: 1296px; padding: 0 16px; font-size: 12px; line-height: 1.5; }
 
-    /* ---------- Portrait radio on narrow containers ---------- */
     @container (max-width: 760px) {
       .panel {
-        --u: calc(100cqw / 400); aspect-ratio: auto; border-radius: calc(var(--u) * 22);
+        --u: calc(100cqw / 400); height: auto; border-radius: calc(var(--u) * 22);
         padding: calc(var(--u) * 28) 0 calc(var(--u) * 24);
         display: grid; justify-items: center; row-gap: calc(var(--u) * 28);
         grid-template-columns: 1fr 1fr; align-content: start;
       }
       .grill { position: static; }
-      .dial { position: relative; left: auto; top: auto; order: 1; grid-column: 1 / -1; width: calc(var(--u) * 290); }
+      .tuner { position: static; transform: none; order: 1; grid-column: 1 / -1; }
+      .knob { width: calc(var(--u) * 109); }
       .display {
+        --s: calc(var(--u) * .5);
         position: relative; left: auto; top: auto; grid-column: 1 / -1;
         width: calc(var(--u) * 348); gap: calc(var(--u) * 14);
-        padding: calc(var(--u) * 19); border-radius: calc(var(--u) * 24);
+        padding: calc(var(--u) * 19) calc(var(--u) * 19) 0; border-radius: calc(var(--u) * 14);
+        border-width: calc(var(--u) * 1.5);
       }
-      .display::before { border-radius: calc(var(--u) * 21); }
       .display__title { font-size: calc(var(--u) * 23); line-height: calc(var(--u) * 28); }
-      .grill { order: 2; grid-template-columns: repeat(9, calc(var(--u) * 11)); gap: calc(var(--u) * 6); }
+      /* Taglines are longer than "Page Not Found": smaller text, same line height, so the display doesn't jump */
+      .display.is-tuned .display__title { font-size: calc(var(--u) * 18); }
+      .display.is-tuned .display__title h2 { overflow: hidden; text-overflow: ellipsis; }
+      .scale__label { font-size: calc(var(--u) * 11); line-height: calc(var(--u) * 13); }
+      .grill { order: 2; grid-template-columns: repeat(11, calc(var(--u) * 11)); gap: calc(var(--u) * 6); }
       .grill.l { justify-self: end; margin-right: calc(var(--u) * 14); }
       .grill.r { justify-self: start; margin-left: calc(var(--u) * 14); }
       .grill i { width: calc(var(--u) * 11); height: calc(var(--u) * 11); }
-      .grill i:nth-child(n+37) { display: none; }
+      .grill i:nth-child(n+45) { display: none; }
     }
 
     @media (max-width: 1280px) {
@@ -239,19 +266,19 @@
 
       <div class="radio">
         <div class="panel">
-          <div class="display">
+          <div class="display" id="display">
             <div class="display__title">
-              <h2>Page Not Found</h2>
-              <p>404</p>
+              <h2 id="display-heading">Page Not Found</h2>
+              <p class="display__code">404</p>
             </div>
             <img class="display__divider" src="assets/display-divider.svg" alt="" width="598" height="1" />
-            <p class="display__status" id="display-status">Dead Air</p>
+            <p class="display__status" id="display-status" aria-live="polite">Dead Air</p>
+            <div class="scale" id="scale"></div>
           </div>
           <div class="grill l" aria-hidden="true"></div>
-          <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Tuning dial. Find one of our stations, then press Enter to listen." aria-valuemin="88" aria-valuemax="108" aria-valuenow="98" aria-valuetext="98.0 MHz, dead air">
-            <svg viewBox="-255 -255 510 510" id="scale"></svg>
-            <div class="ring a"></div><div class="ring b"></div><div class="ring c"></div>
-            <div class="knob"></div>
+          <div class="tuner">
+            <div class="knob" id="knob" tabindex="0" role="slider" aria-label="Tuning knob" aria-describedby="tuner-help" aria-valuemin="88" aria-valuemax="102" aria-valuenow="95" aria-valuetext="95.0 MHz, dead air"><span class="knob__face" id="knob-face"></span></div>
+            <span id="tuner-help" hidden>Find one of our stations, then press Enter to listen.</span>
           </div>
           <div class="grill r" aria-hidden="true"></div>
         </div>
@@ -270,156 +297,148 @@
     });
 
     // Speaker grille holes
-    document.querySelectorAll('.grill').forEach(function (g) { g.innerHTML = '<i></i>'.repeat(90); });
+    document.querySelectorAll('.grill').forEach(function (g) { g.innerHTML = '<i></i>'.repeat(110); });
 
-    // Dial scale
-    var svg = document.getElementById('scale');
-    var NS = 'http://www.w3.org/2000/svg';
-    var el = function (n, a, t) {
-      var e = document.createElementNS(NS, n);
-      for (var k in a) e.setAttribute(k, a[k]);
-      if (t) e.textContent = t;
-      return e;
-    };
-    // FM band 88–108 MHz printed over a 270° arc (13.5° per MHz).
-    // The 90° gap at the bottom is off the band (dead air).
-    var F_MIN = 88, F_MAX = 108, SWEEP = 270;
-    var angleOf = function (f) { return (f - F_MIN) / (F_MAX - F_MIN) * SWEEP - SWEEP / 2; };
-    var freqOf = function (a) { return F_MIN + (a + SWEEP / 2) / SWEEP * (F_MAX - F_MIN); };
-    // Labels in the lower half are flipped so they read upright
-    var label = function (text, a) {
-      var t = 'rotate(' + a + ')' + (Math.abs(a) > 90 ? ' rotate(180 0 -222)' : '');
-      return el('text', { x: 0, y: -222, transform: t }, text);
+    // ---------- Frequency scale ----------
+    // The whole band (88–102 MHz) fits across the display; the needle moves along it.
+    var F_MIN = 88, F_MAX = 102;
+    var scale = document.getElementById('scale');
+    var pct = function (f) { return (f - F_MIN) / (F_MAX - F_MIN) * 100; };
+    var clamp = function (f) { return Math.min(F_MAX, Math.max(F_MIN, f)); };
+    var el = function (tag, cls, f, text) {
+      var e = document.createElement(tag);
+      e.className = cls;
+      e.style.left = pct(f) + '%';
+      if (text) e.textContent = text;
+      return scale.appendChild(e);
     };
 
-    // Ticks every 0.2 MHz, long tick on each whole MHz
-    for (var i = 0; i <= (F_MAX - F_MIN) * 5; i++) {
-      var long = i % 5 === 0;
-      svg.appendChild(el('line', { x1: 0, y1: -(long ? 162 : 166), x2: 0, y2: -172, transform: 'rotate(' + angleOf(F_MIN + i / 5) + ')', stroke: long ? '#6b6b72' : '#8e8e95', 'stroke-width': long ? 1.2 : .8 }));
+    // Numbers on every multiple of 2 MHz (88, 90 … 102), evenly spaced, each with a long tick;
+    // 4 short ticks split each 2 MHz step into equal 0.4 MHz parts.
+    // Counted in whole steps (not by adding 0.4 repeatedly) so nothing drifts off its number.
+    for (var i = 0; i <= (F_MAX - F_MIN) / 2 * 5; i++) {
+      var f = F_MIN + i * 2 / 5;
+      el('span', 'scale__tick' + (i % 5 === 0 ? ' scale__tick--long' : ''), f);
+      if (i % 5 === 0) el('span', 'scale__label', f, String(F_MIN + i / 5 * 2));
     }
-    // Numbers every 2 MHz
-    for (var f = F_MIN; f <= F_MAX; f += 2) svg.appendChild(label(String(f), angleOf(f)));
 
-    // Stations: tuning the needle onto one shows its name in the display
+    // Stations: tuning onto one shows its name in the display
     var STATIONS = [
-      { f: 89.9,  name: 'Money FM 89.9', color: '#009640', url: 'https://audio.sph.com.sg/moneyfm893/' },
-      { f: 91.3,  name: 'One FM 91.3',   color: '#EE3B31', url: 'https://audio.sph.com.sg/onefm913/' },
-      { f: 92,    name: 'Kiss92 FM',     color: '#C93093', url: 'https://audio.sph.com.sg/kiss92/' },
-      { f: 96.3,  name: '96.3好FM',      color: '#00A9AC', url: 'https://audio.sph.com.sg/963haofm/' },
-      { f: 100.3, name: 'UFM 100.3',     color: '#00AECA', url: 'https://audio.sph.com.sg/ufm1003/' }
+      { f: 89.9,  name: 'Money FM 89.9', color: '#009640', url: 'https://audio.sph.com.sg/moneyfm893/', tagline: 'Stay Ahead. Stay Connected.' },
+      { f: 91.3,  name: 'One FM 91.3',   color: '#EE3B31', url: 'https://audio.sph.com.sg/onefm913/',   tagline: 'Good Times. Greatest Hits.' },
+      { f: 92,    name: 'Kiss92 FM',     color: '#C93093', url: 'https://audio.sph.com.sg/kiss92/',     tagline: 'All the great songs in one place.' },
+      { f: 96.3,  name: '96.3好FM',      color: '#00A9AC', url: 'https://audio.sph.com.sg/963haofm/',   tagline: '好时光, 好歌, 好FM' },
+      { f: 100.3, name: 'UFM 100.3',     color: '#00AECA', url: 'https://audio.sph.com.sg/ufm1003/',    tagline: 'U选好歌，非听不可!' }
     ];
-    // Snap zone: the needle locks on once it is within 30% of the gap to the
+    // Snap zone: the tuner locks on once it is within 20% of the gap to the
     // neighbouring station on that side (edge stations reuse their inner gap).
-    var SNAP = 0.3;
-    // 16px semi-circle whose flat edge sits on the outer edge of .ring.a (72% of the 510-unit dial)
-    var DOT_R = 8, SCALE_R = 510 * 0.72 / 2;
+    var SNAP = 0.2; // leaves ~0.44 MHz of dead air between the 95 MHz start and 96.3
     STATIONS.forEach(function (st, i) {
       var prev = STATIONS[i - 1], next = STATIONS[i + 1];
-      var gapLo = prev ? st.f - prev.f : next.f - st.f;
-      var gapHi = next ? next.f - st.f : st.f - prev.f;
-      st.lo = st.f - gapLo * SNAP;
-      st.hi = st.f + gapHi * SNAP;
-      // Rotation lives on a wrapper <g> so CSS can scale the marker itself
-      var g = el('g', { transform: 'rotate(' + angleOf(st.f) + ')' });
-      st.dot = el('path', {
-        class: 'dial__station', fill: st.color,
-        d: 'M' + -DOT_R + ' ' + -SCALE_R + 'A' + DOT_R + ' ' + DOT_R + ' 0 0 1 ' + DOT_R + ' ' + -SCALE_R + 'Z'
-      });
-      st.dot.station = st;
-      g.appendChild(st.dot);
-      svg.appendChild(g);
+      st.lo = st.f - (prev ? st.f - prev.f : next.f - st.f) * SNAP;
+      st.hi = st.f + (next ? next.f - st.f : st.f - prev.f) * SNAP;
+      var a = el('a', 'scale__station', st.f);
+      a.href = st.url;
+      a.setAttribute('aria-label', 'Listen to ' + st.name);
+      a.style.background = st.color;
     });
 
-    // Red tuner needle; on landing it rests mid-dial at 98 MHz (no station → Dead Air)
-    var REST_F = 98, REST = angleOf(REST_F);
-    var needle = el('g', { transform: 'rotate(' + REST + ')' });
-    needle.appendChild(el('line', { x1: 0, y1: -126, x2: 0, y2: -205, stroke: 'rgba(56,56,64,.25)', 'stroke-width': 3, transform: 'translate(1.5 2)' }));
-    needle.appendChild(el('line', { x1: 0, y1: -126, x2: 0, y2: -205, stroke: '#c0392b', 'stroke-width': 2.5, 'stroke-linecap': 'round' }));
-    svg.appendChild(needle);
+    // Red pointer + needle, moved along the scale as you tune
+    var pointer = el('span', 'scale__pointer', F_MIN);
+    var needle = el('span', 'scale__needle', F_MIN);
 
     // ---------- Tuning ----------
-    var dial = document.getElementById('dial');
+    var REST_F = (F_MIN + F_MAX) / 2; // on landing: 95 MHz, the middle of the display (no station → Dead Air)
+    var display = document.getElementById('display');
+    var knob = document.getElementById('knob');
+    var knobFace = document.getElementById('knob-face');
     var statusEl = document.getElementById('display-status');
+    var headingEl = document.getElementById('display-heading');
+    var NOT_FOUND = headingEl.textContent;
     var DEAD_AIR = statusEl.textContent;
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var current = REST, target = REST, freq = REST_F, raf = 0, tuned = null;
+    var current = REST_F, target = REST_F, freq = REST_F, raf = 0, tuned = null;
+    var MHZ_PER_TURN = 4; // one full turn of the knob moves 4 MHz
 
     function stationAt(f) {
-      if (f == null) return null;
       for (var i = 0; i < STATIONS.length; i++) if (f >= STATIONS[i].lo && f <= STATIONS[i].hi) return STATIONS[i];
       return null;
     }
 
-    // f = frequency in MHz, or null when the needle is in the off-band gap
-    function tune(f, angle) {
-      freq = f;
+    // freq is where the knob actually is; the needle shows the station it has snapped to
+    function tune(f) {
+      freq = f = clamp(f);
       var st = stationAt(f);
-      target = st ? angleOf(st.f) : (angle != null ? angle : (f == null ? REST : angleOf(f)));
+      target = st ? st.f : f;
       statusEl.textContent = st ? st.name : DEAD_AIR;
-      STATIONS.forEach(function (s) { s.dot.classList.toggle('is-on', s === st); });
+      headingEl.textContent = st ? st.tagline : NOT_FOUND;
       tuned = st;
-      dial.classList.toggle('is-tuned', !!st);
-      dial.setAttribute('aria-valuenow', f == null ? F_MIN : f.toFixed(1));
-      dial.setAttribute('aria-valuetext', st ? st.name : (f == null ? 'off band, dead air' : f.toFixed(1) + ' MHz, dead air'));
+      display.classList.toggle('is-tuned', !!st);
+      knobFace.style.transform = 'rotate(' + (f - REST_F) / MHZ_PER_TURN * 360 + 'deg)'; // dimple at the top on landing
+      knob.setAttribute('aria-valuenow', f.toFixed(1));
+      knob.setAttribute('aria-valuetext', st ? st.name : f.toFixed(1) + ' MHz, dead air');
       if (!raf) raf = requestAnimationFrame(step);
     }
 
     function step() {
-      var d = ((target - current + 540) % 360) - 180; // shortest way round
-      current = reduceMotion || Math.abs(d) < .05 ? target : current + d * .25;
-      needle.setAttribute('transform', 'rotate(' + current + ')');
+      var d = target - current;
+      current = reduceMotion || Math.abs(d) < .005 ? target : current + d * .25;
+      needle.style.left = pointer.style.left = pct(current) + '%';
       raf = current === target ? 0 : requestAnimationFrame(step);
     }
 
-    // Pointer → angle from the dial centre (0° = top, clockwise)
-    function fromPointer(e) {
-      var r = dial.getBoundingClientRect();
+    // While tuned to a station, clicking anywhere on the display opens it
+    display.addEventListener('click', function (e) {
+      if (tuned && !e.target.closest('.scale__station')) window.location.href = tuned.url;
+    });
+
+    // Knob — turn it: drag round its centre (clockwise = up the band)
+    var lastAngle = null;
+    function angleAt(e) {
+      var r = knob.getBoundingClientRect();
       var dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-      if (Math.hypot(dx, dy) < r.width * .12) return; // too close to the centre to read an angle
-      var a = Math.atan2(dx, -dy) * 180 / Math.PI;
-      if (Math.abs(a) <= SWEEP / 2) tune(freqOf(a));
-      else tune(null, a); // in the gap below the band: dead air
+      if (Math.hypot(dx, dy) < r.width * .1) return null; // too close to the centre to read an angle
+      return Math.atan2(dx, -dy) * 180 / Math.PI;
     }
+    knob.addEventListener('pointerdown', function (e) {
+      knob.setPointerCapture(e.pointerId);
+      lastAngle = angleAt(e);
+      e.preventDefault();
+      knob.focus();
+    });
+    knob.addEventListener('pointermove', function (e) {
+      if (!knob.hasPointerCapture(e.pointerId)) return;
+      var a = angleAt(e);
+      if (a == null) return;
+      if (lastAngle != null) tune(freq + (((a - lastAngle + 540) % 360) - 180) / 360 * MHZ_PER_TURN);
+      lastAngle = a;
+    });
+    // Scroll wheel / trackpad turns it too
+    knob.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      tune(freq + (e.deltaY < 0 ? .1 : -.1));
+    }, { passive: false });
 
-    // Mouse: the needle follows the cursor; leaving the dial returns it to 98 MHz.
-    // Touch/pen: drag around the dial; the needle stays where it is released.
-    dial.addEventListener('pointermove', function (e) {
-      if (e.pointerType === 'mouse' || dial.hasPointerCapture(e.pointerId)) fromPointer(e);
-    });
-    dial.addEventListener('pointerdown', function (e) {
-      // Taps that start on a station marker aren't captured, so the marker gets its click
-      if (e.pointerType !== 'mouse' && !e.target.closest('.dial__station')) { dial.setPointerCapture(e.pointerId); fromPointer(e); }
-    });
-    // Click: a station marker always opens its station. With a mouse, so does clicking
-    // anywhere while the needle is snapped to a station (the hand-cursor area).
-    // Touch/pen taps only open a station from its marker, so dragging the needle never navigates.
-    dial.addEventListener('click', function (e) {
-      var marker = e.target.closest('.dial__station');
-      var st = marker ? marker.station : (e.pointerType === 'touch' || e.pointerType === 'pen' ? null : tuned);
-      if (st) window.location.href = st.url;
-    });
-    dial.addEventListener('pointerleave', function (e) {
-      if (e.pointerType === 'mouse') tune(REST_F);
-    });
-
-    // Keyboard: arrows nudge 0.1 MHz, Page Up/Down jump between stations, Escape returns to 98 MHz
-    dial.addEventListener('keydown', function (e) {
-      var base = freq; // the dial's actual position, not the station it has snapped to
+    // Keyboard on the knob: arrows nudge 0.1 MHz, Page Up/Down jump between stations,
+    // Escape returns to 95 MHz, Enter opens the station it's tuned to
+    knob.addEventListener('keydown', function (e) {
+      var base = freq; // the actual position, not the station it has snapped to
       var next;
       switch (e.key) {
-        case 'ArrowRight': case 'ArrowUp':   next = base == null ? F_MIN : Math.min(F_MAX, base + .1); break;
-        case 'ArrowLeft':  case 'ArrowDown': next = base == null ? F_MAX : Math.max(F_MIN, base - .1); break;
-        case 'PageUp':   next = (STATIONS.filter(function (s) { return base == null || s.f > base + 1e-9; })[0] || STATIONS[0]).f; break;
-        case 'PageDown': next = (STATIONS.slice().reverse().filter(function (s) { return base == null || s.f < base - 1e-9; })[0] || STATIONS[STATIONS.length - 1]).f; break;
+        case 'ArrowRight': case 'ArrowUp':   next = base + .1; break;
+        case 'ArrowLeft':  case 'ArrowDown': next = base - .1; break;
+        case 'PageUp':   next = (STATIONS.filter(function (s) { return s.f > base + 1e-9; })[0] || STATIONS[0]).f; break;
+        case 'PageDown': next = (STATIONS.slice().reverse().filter(function (s) { return s.f < base - 1e-9; })[0] || STATIONS[STATIONS.length - 1]).f; break;
         case 'Home': next = F_MIN; break;
         case 'End':  next = F_MAX; break;
         case 'Escape': tune(REST_F); e.preventDefault(); return;
-        case 'Enter': { var st = stationAt(base); if (st) window.location.href = st.url; return; }
+        case 'Enter': if (tuned) window.location.href = tuned.url; return;
         default: return;
       }
       e.preventDefault();
       tune(Math.round(next * 10) / 10);
     });
+    tune(REST_F);
   </script>
 </body>
 </html>
