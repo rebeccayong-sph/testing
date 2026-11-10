@@ -128,7 +128,7 @@
     .scale { position: relative; height: calc(var(--s) * 128); margin: calc(var(--s) * 4) calc(var(--s) * 20) 0; }
     .scale > * { position: absolute; transform: translateX(-50%); }
     .scale__label { top: calc(var(--s) * 20); font-weight: 500; font-size: calc(var(--s) * 22); line-height: calc(var(--s) * 26); color: var(--page-text); }
-    .scale__tick { bottom: 0; width: calc(var(--s) * 2.5); height: calc(var(--s) * 28); background: var(--harmony-700); }
+    .scale__tick { bottom: 0; width: 1px; height: calc(var(--s) * 28); background: var(--harmony-700); }
     .scale__tick--long { height: calc(var(--s) * 52); }
     .scale__needle { bottom: 0; z-index: 1; width: calc(var(--s) * 3); height: calc(var(--s) * 60); background: #e0201b; pointer-events: none; }
     /* Pointer triangle: moves with the needle, above the numbers and below the status */
@@ -162,7 +162,7 @@
         calc(var(--u) * -4) calc(var(--u) * -5) calc(var(--u) * 10) rgba(255, 255, 255, .85),
         inset calc(var(--u) * -3) calc(var(--u) * -6) calc(var(--u) * 8) rgba(84, 84, 92, .12),
         inset calc(var(--u) * 2) calc(var(--u) * 3) calc(var(--u) * 3) rgba(255, 255, 255, .9);
-      cursor: grab; touch-action: none; transition: transform .15s ease, box-shadow .15s ease;
+      cursor: default; touch-action: none; transition: transform .15s ease, box-shadow .15s ease;
     }
     .knob__face { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
     .knob__face::after { /* grip dimple near the rim */
@@ -170,8 +170,9 @@
       width: 7%; aspect-ratio: 1; border-radius: 50%; background: #e2e2e5;
       box-shadow: inset 0 calc(var(--u) * 2) calc(var(--u) * 3) rgba(62, 62, 70, .3), 0 1px 0 rgba(255, 255, 255, .9);
     }
+    .knob.is-tuned { cursor: pointer; } /* on a station: click the knob to open it */
     .knob:active {
-      cursor: grabbing; transform: scale(.98);
+      transform: scale(.98);
       box-shadow:
         calc(var(--u) * 4) calc(var(--u) * 8) calc(var(--u) * 12) rgba(56, 56, 64, .3),
         calc(var(--u) * -3) calc(var(--u) * -4) calc(var(--u) * 8) rgba(255, 255, 255, .85),
@@ -358,7 +359,9 @@
     var DEAD_AIR = statusEl.textContent;
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var current = REST_F, target = REST_F, freq = REST_F, raf = 0, tuned = null;
-    var MHZ_PER_TURN = 4; // one full turn of the knob moves 4 MHz
+    // One full turn covers the whole band, so the dimple can point straight at the cursor:
+    // top = 95 (start), clockwise up to 102 at the bottom, anticlockwise down to 88.
+    var MHZ_PER_TURN = F_MAX - F_MIN;
 
     function stationAt(f) {
       for (var i = 0; i < STATIONS.length; i++) if (f >= STATIONS[i].lo && f <= STATIONS[i].hi) return STATIONS[i];
@@ -374,6 +377,7 @@
       headingEl.textContent = st ? st.tagline : NOT_FOUND;
       tuned = st;
       display.classList.toggle('is-tuned', !!st);
+      knob.classList.toggle('is-tuned', !!st);
       knobFace.style.transform = 'rotate(' + (f - REST_F) / MHZ_PER_TURN * 360 + 'deg)'; // dimple at the top on landing
       knob.setAttribute('aria-valuenow', f.toFixed(1));
       knob.setAttribute('aria-valuetext', st ? st.name : f.toFixed(1) + ' MHz, dead air');
@@ -392,26 +396,34 @@
       if (tuned && !e.target.closest('.scale__station')) window.location.href = tuned.url;
     });
 
-    // Knob — turn it: drag round its centre (clockwise = up the band)
-    var lastAngle = null;
+    // Knob — the dimple follows the pointer round the knob: hover with a mouse,
+    // or touch and drag. Landing on a station makes the knob a link to it.
     function angleAt(e) {
       var r = knob.getBoundingClientRect();
       var dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
       if (Math.hypot(dx, dy) < r.width * .1) return null; // too close to the centre to read an angle
       return Math.atan2(dx, -dy) * 180 / Math.PI;
     }
+    function turnTo(e) {
+      var a = angleAt(e);
+      if (a != null) tune(REST_F + a / 360 * MHZ_PER_TURN);
+    }
+    var tunedAtDown = null, moved = false;
+    knob.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'mouse' || knob.hasPointerCapture(e.pointerId)) { moved = true; turnTo(e); }
+    });
     knob.addEventListener('pointerdown', function (e) {
-      knob.setPointerCapture(e.pointerId);
-      lastAngle = angleAt(e);
+      tunedAtDown = tuned; moved = false;
+      if (e.pointerType !== 'mouse') { knob.setPointerCapture(e.pointerId); turnTo(e); }
       e.preventDefault();
       knob.focus();
     });
-    knob.addEventListener('pointermove', function (e) {
-      if (!knob.hasPointerCapture(e.pointerId)) return;
-      var a = angleAt(e);
-      if (a == null) return;
-      if (lastAngle != null) tune(freq + (((a - lastAngle + 540) % 360) - 180) / 360 * MHZ_PER_TURN);
-      lastAngle = a;
+    // Click while on a station opens it. On touch, only a plain tap on a station that was
+    // already tuned counts, so dragging onto a station never navigates by itself.
+    knob.addEventListener('click', function (e) {
+      if (!tuned) return;
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') { if (moved || tunedAtDown !== tuned) return; }
+      window.location.href = tuned.url;
     });
     // Scroll wheel / trackpad turns it too
     knob.addEventListener('wheel', function (e) {
