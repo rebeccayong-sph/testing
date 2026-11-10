@@ -112,7 +112,7 @@
     .display__title > * { font: inherit; }
     .display__divider { width: 100%; height: 1px; }
     .display__status {
-      font-weight: 600; font-size: calc(var(--u) * 26); line-height: calc(var(--u) * 31);
+      font-weight: 600; font-size: 20px; line-height: 24px; /* fixed size, doesn't scale with the radio */
       color: var(--page-text); white-space: nowrap; text-align: center;
     }
 
@@ -138,11 +138,13 @@
     }
     .dial { cursor: crosshair; touch-action: none; -webkit-user-select: none; user-select: none; }
     .dial:focus-visible { outline: 2px solid var(--btn-primary); outline-offset: 6px; }
-    .dial__station { stroke: transparent; stroke-width: 2; transition: stroke .2s ease; }
-    .dial__station.is-on { stroke: #fff; }
+    /* Grows 50% from the middle of its flat edge, so it stays seated on ring a */
+    .dial__station { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .2s ease; }
+    .dial__station.is-on { transform: scale(1.5); }
+    .dial__station, .dial.is-tuned { cursor: pointer; } /* anywhere in a station's snap zone links to it */
     .dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
     .dial text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 500; fill: #2e2e34; font-size: 21px; text-anchor: middle; dominant-baseline: middle; }
-    .ring { position: absolute; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 1px rgba(255, 255, 255, .9), inset 0 1px 1px rgba(255, 255, 255, .9); }
+    .ring { pointer-events: none; position: absolute; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 1px 1px rgba(255, 255, 255, .9), inset 0 1px 1px rgba(255, 255, 255, .9); }
     .ring.a { width: 72%; height: 72%; border: 1px solid rgba(104, 104, 112, .35); }
     .ring.b { width: 62.5%; height: 62.5%; border: 1px solid rgba(104, 104, 112, .3); }
     .ring.c { width: 52%; height: 52%; border: 1px solid rgba(104, 104, 112, .25); }
@@ -177,7 +179,6 @@
       }
       .display::before { border-radius: calc(var(--u) * 21); }
       .display__title { font-size: calc(var(--u) * 23); line-height: calc(var(--u) * 28); }
-      .display__status { font-size: calc(var(--u) * 19); line-height: calc(var(--u) * 23); }
       .grill { order: 2; grid-template-columns: repeat(9, calc(var(--u) * 11)); gap: calc(var(--u) * 6); }
       .grill.l { justify-self: end; margin-right: calc(var(--u) * 14); }
       .grill.r { justify-self: start; margin-left: calc(var(--u) * 14); }
@@ -234,7 +235,7 @@
 
   <main class="main">
     <div class="width">
-      <h1 class="lead">You’ve tuned to a frequency that doesn’t exist.<br />No static, no signal.</h1>
+      <h1 class="lead">You’ve tuned to a frequency that doesn’t exist.</h1>
 
       <div class="radio">
         <div class="panel">
@@ -247,7 +248,7 @@
             <p class="display__status" id="display-status">Dead Air</p>
           </div>
           <div class="grill l" aria-hidden="true"></div>
-          <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Tuning dial. Find one of our stations." aria-valuemin="88" aria-valuemax="108" aria-valuenow="98" aria-valuetext="98.0 MHz, dead air">
+          <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Tuning dial. Find one of our stations, then press Enter to listen." aria-valuemin="88" aria-valuemax="108" aria-valuenow="98" aria-valuetext="98.0 MHz, dead air">
             <svg viewBox="-255 -255 510 510" id="scale"></svg>
             <div class="ring a"></div><div class="ring b"></div><div class="ring c"></div>
             <div class="knob"></div>
@@ -301,16 +302,32 @@
 
     // Stations: tuning the needle onto one shows its name in the display
     var STATIONS = [
-      { f: 89.9,  name: 'Money FM 89.9', color: '#009640' },
-      { f: 91.3,  name: 'One FM 91.3',   color: '#EE3B31' },
-      { f: 92,    name: 'Kiss92 FM',     color: '#C93093' },
-      { f: 96.3,  name: '96.3好FM',      color: '#00A9AC' },
-      { f: 100.3, name: 'UFM 100.3',     color: '#00AECA' }
+      { f: 89.9,  name: 'Money FM 89.9', color: '#009640', url: 'https://audio.sph.com.sg/moneyfm893/' },
+      { f: 91.3,  name: 'One FM 91.3',   color: '#EE3B31', url: 'https://audio.sph.com.sg/onefm913/' },
+      { f: 92,    name: 'Kiss92 FM',     color: '#C93093', url: 'https://audio.sph.com.sg/kiss92/' },
+      { f: 96.3,  name: '96.3好FM',      color: '#00A9AC', url: 'https://audio.sph.com.sg/963haofm/' },
+      { f: 100.3, name: 'UFM 100.3',     color: '#00AECA', url: 'https://audio.sph.com.sg/ufm1003/' }
     ];
-    var SNAP = 0.3; // MHz either side of a station that locks on to it
-    STATIONS.forEach(function (st) {
-      st.dot = el('circle', { class: 'dial__station', cx: 0, cy: -184, r: 4.55, fill: st.color, transform: 'rotate(' + angleOf(st.f) + ')' });
-      svg.appendChild(st.dot);
+    // Snap zone: the needle locks on once it is within 30% of the gap to the
+    // neighbouring station on that side (edge stations reuse their inner gap).
+    var SNAP = 0.3;
+    // 16px semi-circle whose flat edge sits on the outer edge of .ring.a (72% of the 510-unit dial)
+    var DOT_R = 8, SCALE_R = 510 * 0.72 / 2;
+    STATIONS.forEach(function (st, i) {
+      var prev = STATIONS[i - 1], next = STATIONS[i + 1];
+      var gapLo = prev ? st.f - prev.f : next.f - st.f;
+      var gapHi = next ? next.f - st.f : st.f - prev.f;
+      st.lo = st.f - gapLo * SNAP;
+      st.hi = st.f + gapHi * SNAP;
+      // Rotation lives on a wrapper <g> so CSS can scale the marker itself
+      var g = el('g', { transform: 'rotate(' + angleOf(st.f) + ')' });
+      st.dot = el('path', {
+        class: 'dial__station', fill: st.color,
+        d: 'M' + -DOT_R + ' ' + -SCALE_R + 'A' + DOT_R + ' ' + DOT_R + ' 0 0 1 ' + DOT_R + ' ' + -SCALE_R + 'Z'
+      });
+      st.dot.station = st;
+      g.appendChild(st.dot);
+      svg.appendChild(g);
     });
 
     // Red tuner needle; on landing it rests mid-dial at 98 MHz (no station → Dead Air)
@@ -325,11 +342,11 @@
     var statusEl = document.getElementById('display-status');
     var DEAD_AIR = statusEl.textContent;
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var current = REST, target = REST, freq = REST_F, raf = 0;
+    var current = REST, target = REST, freq = REST_F, raf = 0, tuned = null;
 
     function stationAt(f) {
       if (f == null) return null;
-      for (var i = 0; i < STATIONS.length; i++) if (Math.abs(STATIONS[i].f - f) <= SNAP) return STATIONS[i];
+      for (var i = 0; i < STATIONS.length; i++) if (f >= STATIONS[i].lo && f <= STATIONS[i].hi) return STATIONS[i];
       return null;
     }
 
@@ -340,6 +357,7 @@
       target = st ? angleOf(st.f) : (angle != null ? angle : (f == null ? REST : angleOf(f)));
       statusEl.textContent = st ? st.name : DEAD_AIR;
       STATIONS.forEach(function (s) { s.dot.classList.toggle('is-on', s === st); });
+      tuned = st;
       dial.classList.toggle('is-tuned', !!st);
       dial.setAttribute('aria-valuenow', f == null ? F_MIN : f.toFixed(1));
       dial.setAttribute('aria-valuetext', st ? st.name : (f == null ? 'off band, dead air' : f.toFixed(1) + ' MHz, dead air'));
@@ -369,7 +387,16 @@
       if (e.pointerType === 'mouse' || dial.hasPointerCapture(e.pointerId)) fromPointer(e);
     });
     dial.addEventListener('pointerdown', function (e) {
-      if (e.pointerType !== 'mouse') { dial.setPointerCapture(e.pointerId); fromPointer(e); }
+      // Taps that start on a station marker aren't captured, so the marker gets its click
+      if (e.pointerType !== 'mouse' && !e.target.closest('.dial__station')) { dial.setPointerCapture(e.pointerId); fromPointer(e); }
+    });
+    // Click: a station marker always opens its station. With a mouse, so does clicking
+    // anywhere while the needle is snapped to a station (the hand-cursor area).
+    // Touch/pen taps only open a station from its marker, so dragging the needle never navigates.
+    dial.addEventListener('click', function (e) {
+      var marker = e.target.closest('.dial__station');
+      var st = marker ? marker.station : (e.pointerType === 'touch' || e.pointerType === 'pen' ? null : tuned);
+      if (st) window.location.href = st.url;
     });
     dial.addEventListener('pointerleave', function (e) {
       if (e.pointerType === 'mouse') tune(REST_F);
@@ -387,6 +414,7 @@
         case 'Home': next = F_MIN; break;
         case 'End':  next = F_MAX; break;
         case 'Escape': tune(REST_F); e.preventDefault(); return;
+        case 'Enter': { var st = stationAt(base); if (st) window.location.href = st.url; return; }
         default: return;
       }
       e.preventDefault();
