@@ -152,10 +152,10 @@
 
     /* Tuning knob — Braun-style plain light disc with a soft drop shadow. Turn it to tune;
        only the inner face (with its small dimple) rotates, so lighting and shadow stay put. */
-    .tuner { position: absolute; left: calc(var(--u) * 850); top: calc(var(--grill-top) + var(--u) * 126); transform: translateX(-50%); }
+    .tuner { position: absolute; left: calc(var(--u) * 850); top: calc(var(--grill-top) + var(--u) * 96.25); /* centred on the grilles */ transform: translateX(-50%); }
     .knob {
       position: relative;
-      width: calc(var(--u) * 195); aspect-ratio: 1; border-radius: 50%;
+      width: calc(var(--u) * 253.5); aspect-ratio: 1; border-radius: 50%;
       background: radial-gradient(circle at 42% 36%, #f3f3f4 0%, #e8e8ea 55%, #dadadd 100%);
       box-shadow:
         calc(var(--u) * 8) calc(var(--u) * 16) calc(var(--u) * 22) rgba(56, 56, 64, .3),
@@ -194,7 +194,7 @@
       }
       .grill { position: static; }
       .tuner { position: static; transform: none; order: 1; grid-column: 1 / -1; }
-      .knob { width: calc(var(--u) * 109); }
+      .knob { width: calc(var(--u) * 141.7); }
       .display {
         --s: calc(var(--u) * .5);
         position: relative; left: auto; top: auto; grid-column: 1 / -1;
