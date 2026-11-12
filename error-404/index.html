@@ -81,8 +81,8 @@
     .radio { container-type: inline-size; width: min(100%, 1100px); }
     .panel {
       --u: calc(100cqw / 1700);
-      /* Display bottom = 358u + 30px (its fixed-px status line + divider); grilles sit 48px below it */
-      --grill-top: calc(var(--u) * 358 + 30px + 48px);
+      /* Display bottom = 358u + 59px (its fixed-px two-line status + divider); grilles sit 48px below it */
+      --grill-top: calc(var(--u) * 358 + 59px + 48px);
       position: relative; height: calc(var(--grill-top) + var(--u) * 476);
       border-radius: calc(var(--u) * 28);
     }
@@ -119,10 +119,15 @@
     .display.is-tuned .display__title { color: #000; justify-content: center; text-align: center; }
     .display.is-tuned .display__code { display: none; }
     .display__divider { width: 100%; height: 1px; }
+    /* Fixed size, doesn't scale with the radio. Always two lines tall so the display doesn't
+       jump between the two-line landing prompt and one-line station names. */
     .display__status {
-      font-weight: 600; font-size: 24px; line-height: 29px; /* fixed size, doesn't scale with the radio */
-      color: var(--page-text); white-space: nowrap; text-align: center;
+      font-weight: 600; font-size: 24px; line-height: 29px; min-height: 58px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--page-text); text-align: center; text-wrap: balance;
     }
+    /* Landing prompt ("Turn the knob below…") is smaller than the 24px station names */
+    .display:not(.is-tuned) .display__status { font-size: 18px; line-height: 22px; }
 
     /* Frequency scale: the whole 88–102 MHz band fits the display; ticks every 0.4 MHz, numbers every 2 MHz */
     .scale { position: relative; height: calc(var(--s) * 128); margin: calc(var(--s) * 4) calc(var(--s) * 20) 0; }
@@ -273,12 +278,12 @@
               <p class="display__code">404</p>
             </div>
             <img class="display__divider" src="assets/display-divider.svg" alt="" width="598" height="1" />
-            <p class="display__status" id="display-status" aria-live="polite">Dead Air</p>
+            <p class="display__status" id="display-status" aria-live="polite">Turn the knob below to visit our radio channels</p>
             <div class="scale" id="scale"></div>
           </div>
           <div class="grill l" aria-hidden="true"></div>
           <div class="tuner">
-            <div class="knob" id="knob" tabindex="0" role="slider" aria-label="Tuning knob" aria-describedby="tuner-help" aria-valuemin="88" aria-valuemax="102" aria-valuenow="95" aria-valuetext="95.0 MHz, dead air"><span class="knob__face" id="knob-face"></span></div>
+            <div class="knob" id="knob" tabindex="0" role="slider" aria-label="Tuning knob" aria-describedby="tuner-help" aria-valuemin="88" aria-valuemax="102" aria-valuenow="95" aria-valuetext="95.0 MHz, no station"><span class="knob__face" id="knob-face"></span></div>
             <span id="tuner-help" hidden>Find one of our stations, then press Enter to listen.</span>
           </div>
           <div class="grill r" aria-hidden="true"></div>
@@ -349,14 +354,14 @@
     var needle = el('span', 'scale__needle', F_MIN);
 
     // ---------- Tuning ----------
-    var REST_F = (F_MIN + F_MAX) / 2; // on landing: 95 MHz, the middle of the display (no station → Dead Air)
+    var REST_F = (F_MIN + F_MAX) / 2; // on landing: 95 MHz, the middle of the display (no station → the landing prompt)
     var display = document.getElementById('display');
     var knob = document.getElementById('knob');
     var knobFace = document.getElementById('knob-face');
     var statusEl = document.getElementById('display-status');
     var headingEl = document.getElementById('display-heading');
     var NOT_FOUND = headingEl.textContent;
-    var DEAD_AIR = statusEl.textContent;
+    var PROMPT = statusEl.textContent;
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var current = REST_F, target = REST_F, freq = REST_F, raf = 0, tuned = null;
     // One full turn covers the whole band, so the dimple can point straight at the cursor:
@@ -373,14 +378,14 @@
       freq = f = clamp(f);
       var st = stationAt(f);
       target = st ? st.f : f;
-      statusEl.textContent = st ? st.name : DEAD_AIR;
+      statusEl.textContent = st ? st.name : PROMPT;
       headingEl.textContent = st ? st.tagline : NOT_FOUND;
       tuned = st;
       display.classList.toggle('is-tuned', !!st);
       knob.classList.toggle('is-tuned', !!st);
       knobFace.style.transform = 'rotate(' + (f - REST_F) / MHZ_PER_TURN * 360 + 'deg)'; // dimple at the top on landing
       knob.setAttribute('aria-valuenow', f.toFixed(1));
-      knob.setAttribute('aria-valuetext', st ? st.name : f.toFixed(1) + ' MHz, dead air');
+      knob.setAttribute('aria-valuetext', st ? st.name : f.toFixed(1) + ' MHz, no station');
       if (!raf) raf = requestAnimationFrame(step);
     }
 
